@@ -64,10 +64,8 @@
 
 - **C4 System Context Diagram:**
   ![C4 System Context Diagram](./diagrams/c4-context.png)
-  *(Вихідний код: [c4-context.puml](./c4-context.puml))*
 - **C4 Container Diagram:**
   ![C4 Container Diagram](./diagrams/c4-container.png)
-  *(Вихідний код: [c4-container.puml](./c4-container.puml))*
 
 ---
 
