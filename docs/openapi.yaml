@@ -1,0 +1,215 @@
+openapi: 3.1.1
+info:
+  title: TechRepair Hub API
+  version: 1.0.0
+  description: >
+    REST API для керування заявками на ремонт комп'ютерної техніки.
+    Адаптер поверх доменного ядра RepairOrder (ЛР 2).
+servers:
+  - url: http://localhost:8000
+    description: Локальний сервер розробки
+
+paths:
+  /api/v1/repair-orders:
+    post:
+      summary: Створити нову заявку на ремонт
+      operationId: createRepairOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRepairOrderRequest'
+            example:
+              brand: "Apple"
+              model: "MacBook Pro 14"
+              serial_number: "C02X1234ABCD"
+      responses:
+        '201':
+          description: Заявку успішно створено у статусі NEW
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepairOrderResponse'
+        '422':
+          description: Помилка валідації вхідних даних (відсутні або некоректні поля)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/repair-orders/{order_id}:
+    get:
+      summary: Отримати стан заявки на ремонт
+      operationId: getRepairOrder
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Дані заявки успішно отримано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepairOrderResponse'
+        '404':
+          description: Заявку з вказаним ID не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/repair-orders/{order_id}/status:
+    patch:
+      summary: Змінити стан заявки (перехід за життєвим циклом)
+      operationId: updateRepairOrderStatus
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStatusRequest'
+            examples:
+              startDiagnostics:
+                summary: Почати діагностику (NEW -> IN_DIAGNOSTICS)
+                value:
+                  status: "IN_DIAGNOSTICS"
+              completeDiagnostics:
+                summary: Завершити діагностику з кошторисом (IN_DIAGNOSTICS -> WAITING_FOR_APPROVAL)
+                value:
+                  status: "WAITING_FOR_APPROVAL"
+                  estimated_cost: 150.0
+                  currency: "USD"
+      responses:
+        '200':
+          description: Статус заявки успішно оновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepairOrderResponse'
+        '404':
+          description: Заявку не знайдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Конфлікт стану (заборонений перехід або не проведено діагностику)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Некоректні дані (невідомий статус або відсутній кошторис)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    RepairStatus:
+      type: string
+      enum:
+        - NEW
+        - IN_DIAGNOSTICS
+        - WAITING_FOR_APPROVAL
+        - IN_PROGRESS
+        - COMPLETED
+        - CANCELLED
+
+    CreateRepairOrderRequest:
+      type: object
+      required:
+        - brand
+        - model
+        - serial_number
+      properties:
+        brand:
+          type: string
+          minLength: 1
+          maxLength: 100
+        model:
+          type: string
+          minLength: 1
+          maxLength: 100
+        serial_number:
+          type: string
+          minLength: 3
+          maxLength: 100
+
+    UpdateStatusRequest:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          $ref: '#/components/schemas/RepairStatus'
+        estimated_cost:
+          type:
+            - number
+            - "null"
+          minimum: 0.01
+          description: Обов'язкове при переході у WAITING_FOR_APPROVAL
+        currency:
+          type: string
+          default: "USD"
+          minLength: 3
+          maxLength: 3
+
+    RepairOrderResponse:
+      type: object
+      required:
+        - id
+        - status
+        - diagnostic_completed
+        - device
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/RepairStatus'
+        diagnostic_completed:
+          type: boolean
+        estimated_cost:
+          type:
+            - number
+            - "null"
+        currency:
+          type:
+            - string
+            - "null"
+        device:
+          type: object
+          required:
+            - brand
+            - model
+            - serial_number
+          properties:
+            brand:
+              type: string
+            model:
+              type: string
+            serial_number:
+              type: string
+
+    ErrorResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
