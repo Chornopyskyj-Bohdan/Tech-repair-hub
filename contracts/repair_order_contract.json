@@ -1,0 +1,39 @@
+{
+  "consumer": "RepairOrderClient",
+  "provider": "TechRepairHubAPI",
+  "interactions": [
+    {
+      "description": "Створення заявки на ремонт повертає 201 та очікувану структуру",
+      "request": {
+        "method": "POST",
+        "path": "/api/v1/repair-orders",
+        "body": {
+          "brand": "Lenovo",
+          "model": "ThinkPad X1",
+          "serial_number": "PF2X9876"
+        }
+      },
+      "expected_response": {
+        "status": 201,
+        "required_fields": {
+          "id": "str",
+          "status": "str",
+          "diagnostic_completed": "bool",
+          "device": "dict"
+        },
+        "sample_body": {
+          "id": "550e8400-e29b-41d4-a716-446655440000",
+          "status": "NEW",
+          "diagnostic_completed": false,
+          "estimated_cost": null,
+          "currency": null,
+          "device": {
+            "brand": "Lenovo",
+            "model": "ThinkPad X1",
+            "serial_number": "PF2X9876"
+          }
+        }
+      }
+    }
+  ]
+}

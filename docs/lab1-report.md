@@ -63,9 +63,9 @@
 ## 4. Документування архітектури (Модель C4)
 
 - **C4 System Context Diagram:**
-  ![C4 System Context Diagram](./diagrams/c4-context.png)
+  ![C4 System Context Diagram](../diagrams/c4-context.png)
 - **C4 Container Diagram:**
-  ![C4 Container Diagram](./diagrams/c4-container.png)
+  ![C4 Container Diagram](../diagrams/c4-container.png)
 
 ---
 
