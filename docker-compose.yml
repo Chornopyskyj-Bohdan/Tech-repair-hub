@@ -1,0 +1,15 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.13.7-management-alpine
+    container_name: techrepair-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP протокол для застосунку
+      - "15672:15672" # Веб-інтерфейс керування (guest / guest)
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
